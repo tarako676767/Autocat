@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 token = os.getenv('TOKEN')
-owner_id_env = os.getenv('OWNER_ID',1399633592681889864)
+owner_id_env = os.getenv('OWNER_ID', 1399633592681889864)
 owner_id = int(owner_id_env) if owner_id_env else None
 
 # --- Flaskの設定 ---
@@ -32,14 +32,15 @@ bot = commands.Bot(command_prefix='$', intents=intents, help_command=None, owner
 
 async def load_cogs():
     print("🔄 --- Cogの読み込みを開始します ---")
-    for filename in os.listdir("./Cogs"):
-        if filename.endswith(".py") and filename != "__init__.py":
-            try:
-                await bot.load_extension(f"Cogs.{filename[:-3]}")
-                print(f"✅ Loaded: {filename}")
-            except Exception as e:
-                print(f"❌ Failed to load {filename}: {e}")
-                
+    if os.path.exists("./Cogs"):
+        for filename in os.listdir("./Cogs"):
+            if filename.endswith(".py") and filename != "__init__.py":
+                try:
+                    await bot.load_extension(f"Cogs.{filename[:-3]}")
+                    print(f"✅ Loaded: {filename}")
+                except Exception as e:
+                    print(f"❌ Failed to load {filename}: {e}")
+    
     print("🔄 --- コマンドの同期(sync)を実行中... ---")
     try:
         synced = await bot.tree.sync()
