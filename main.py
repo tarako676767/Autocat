@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 token = os.getenv('TOKEN')
-owner_id = int(os.getenv('OWNER_ID', 0))
+owner_id = int(os.getenv('OWNER_ID', 1399633592681889864))
 
 # --- Render/Flask 設定 (Keep-alive) ---
 app = Flask(__name__)
