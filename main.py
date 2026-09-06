@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 token = os.getenv('TOKEN')
-owner_id_env = os.getenv('OWNER_ID'1399633592681889864)
+owner_id_env = os.getenv('OWNER_ID',1399633592681889864)
 owner_id = int(owner_id_env) if owner_id_env else None
 
 # --- Flaskの設定 ---
