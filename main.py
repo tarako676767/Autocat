@@ -1,67 +1,63 @@
-import os
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
+import os
+import threading
 from flask import Flask
-from threading import Thread
+from dotenv import load_dotenv
 
-# --- Flask Server (Keep-alive) ---
-app = Flask("")
-
-@app.route("/")
-def home():
-    return "Bot is alive!"
-
-def run():
-    # Render等のポート指定に対応
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
-# --- Discord Bot ---
 load_dotenv()
+token = os.getenv('TOKEN')
+owner_id_env = os.getenv('OWNER_ID',1399633592681889864)
+owner_id = int(owner_id_env) if owner_id_env else None
 
-TOKEN = os.getenv("TOKEN")
+# --- Flaskの設定 ---
+app = Flask(__name__)
 
-intents = discord.Intents.default()
-intents.message_content = True
+@app.route('/')
+def home():
+    return "Bot is running!"
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+def run_flask():
+    port = int(os.getenv("PORT", 10000))
+    # ログ出力で停止しないよう処理
+    app.run(host='0.0.0.0', port=port, use_reloader=False)
 
-STATUS = "❤にゃんこ大戦争自動代行❤"
+# Flaskを非同期スレッドで先に起動
+t = threading.Thread(target=run_flask, daemon=True)
+t.start()
+
+# --- Discord Botの設定 ---
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix='$', intents=intents, help_command=None, owner_id=owner_id)
 
 async def load_cogs():
+    print("🔄 --- Cogの読み込みを開始します ---")
     for filename in os.listdir("./Cogs"):
         if filename.endswith(".py") and filename != "__init__.py":
             try:
                 await bot.load_extension(f"Cogs.{filename[:-3]}")
-                print(f"✅ Loaded {filename}")
+                print(f"✅ Loaded: {filename}")
             except Exception as e:
                 print(f"❌ Failed to load {filename}: {e}")
+                
+    print("🔄 --- コマンドの同期(sync)を実行中... ---")
+    try:
+        synced = await bot.tree.sync()
+        print(f"✅ 全 {len(synced)} 件のコマンドを同期しました！")
+    except Exception as e:
+        print(f"❌ Sync失敗: {e}")
 
 bot.setup_hook = load_cogs
 
+STATUS = "❤にゃんこ大戦争自動代行❤ admin@1399633592681889864 サポートサーバーhttps://discord.gg/Gunnb2V7Pm"
+
 @bot.event
 async def on_ready():
-    print("🤖 Bot Is Ready.")
+    print(f"🤖 Botが正常に起動しました: {bot.user}")
     await bot.change_presence(activity=discord.Game(name=STATUS), status=discord.Status.idle)
-    
-    # スラッシュコマンドの全同期処理
-    try:
-        synced = await bot.tree.sync()
-        print(f"✅ 全コマンド ({len(synced)}個) の同期が完了しました。")
-    except Exception as e:
-        print(f"❌ 同期エラー: {e}")
 
 if __name__ == "__main__":
-    # Flaskサーバーを別スレッドで起動
-    keep_alive()
-    
-    # Botの起動
-    if TOKEN:
-        bot.run(TOKEN)
+    if token:
+        bot.run(token)
     else:
-        print("❌ TOKENが見つかりません。")
+        print("❌ エラー: 環境変数 TOKEN が設定されていません。")
