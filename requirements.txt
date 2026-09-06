@@ -1,5 +1,7 @@
 discord.py
-flask
 python-dotenv
+flask
 requests
+aiohttp
+pytz
 bcsfe
