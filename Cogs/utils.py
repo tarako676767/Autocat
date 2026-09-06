@@ -72,7 +72,8 @@ def save_items(data):
 
 def is_allowed():
     async def predicate(interaction: discord.Interaction) -> bool:
-        if await interaction.client.is_owner(interaction.user):
+        # オーナーチェック（数値比較で安全化）
+        if interaction.client.owner_id and interaction.user.id == interaction.client.owner_id:
             return True
         
         config = load_config()
